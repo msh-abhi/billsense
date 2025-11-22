@@ -1,9 +1,9 @@
 import SibApiV3Sdk from '@sendinblue/client'
 
-const apiInstance = new SibApiV3Sdk.TransactionalEmailsApi()
-// API key should be set via environment variable BREVO_API_KEY
-const apiKey = import.meta.env.VITE_BREVO_API_KEY || '';
-apiInstance.setApiKey(SibApiV3Sdk.TransactionalEmailsApiApiKeys.apiKey, apiKey);
+// NOTE: This file is deprecated in favor of Supabase Edge Functions
+// API keys are stored per-user in Supabase email_settings table
+// Email sending is handled by supabase/functions/send-invoice-email/index.ts
+const apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
 
 export interface EmailTemplate {
   to: string

@@ -100,7 +100,8 @@ Deno.serve(async (req) => {
 
     } else {
       // Default to Brevo (System or Custom)
-      const apiKey = Deno.env.get('BREVO_API_KEY')
+      // Multi-tenant: API key is fetched from user's email_settings in Supabase
+      let apiKey = Deno.env.get('BREVO_API_KEY') // Fallback only, should use user's key
       let senderName = 'BillSense'
       let senderEmail = 'noreply@billsense.com'
 
