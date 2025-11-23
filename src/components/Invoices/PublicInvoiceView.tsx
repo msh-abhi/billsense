@@ -3,6 +3,9 @@ import { useParams } from 'react-router-dom'
 import { Calendar, DollarSign, FileText, Clock, Download } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { generatePDF } from '../../lib/pdfGenerator'
+import { BankTransferInfo } from '../Payments/BankTransferInfo'
+import { StripePayment } from '../Payments/StripePayment'
+import { PayPalPayment } from '../Payments/PayPalPayment'
 
 interface Invoice {
   id: string;
@@ -20,6 +23,12 @@ interface Invoice {
   clients: { name: string; email: string; address_line1?: string; address_line2?: string; city?: string; state_province?: string; postal_code?: string; country?: string; tin_number?: string; } | null;
   profiles: { id: string; full_name: string; company_name: string | null; email: string; address_line1?: string; address_line2?: string; city?: string; state_province?: string; postal_code?: string; country?: string; vat_number?: string; tin_number?: string; show_address_on_invoice?: boolean; show_vat_on_invoice?: boolean; show_tin_on_invoice?: boolean; } | null;
   invoice_items: Array<{ description: string; quantity: number; rate: number; amount: number; }>;
+  payment_gateway?: {
+    id: string;
+    gateway: 'stripe' | 'paypal' | 'wise' | 'bank_transfer';
+    is_active: boolean;
+    config: any;
+  } | null;
 }
 
 export const PublicInvoiceView: React.FC = () => {
@@ -207,12 +216,61 @@ export const PublicInvoiceView: React.FC = () => {
               </div>
             )}
 
-            {invoice.status !== 'paid' && (
-              <div className="text-center">
-                <button className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-3 rounded-lg font-medium hover:from-blue-700 hover:to-purple-700 transition-colors">
-                  Pay Invoice
-                </button>
-                <p className="text-sm text-gray-600 mt-2">Secure payment processing powered by BillSense</p>
+            {invoice.status !== 'paid' && invoice.payment_gateway && (
+              <div className="mt-8">
+                <h3 className="text-xl font-semibold text-gray-900 mb-6">Payment Options</h3>
+
+                {/* Stripe Payment */}
+                {invoice.payment_gateway.gateway === 'stripe' && invoice.payment_gateway.config?.publishable_key && (
+                  <StripePayment
+                    invoiceId={invoice.id}
+                    amount={invoice.total}
+                    currency={invoice.currency}
+                    invoiceNumber={invoice.invoice_number}
+                    publishableKey={invoice.payment_gateway.config.publishable_key}
+                  />
+                )}
+
+                {/* PayPal Payment */}
+                {invoice.payment_gateway.gateway === 'paypal' && invoice.payment_gateway.config?.client_id && (
+                  <PayPalPayment
+                    invoiceId={invoice.id}
+                    amount={invoice.total}
+                    currency={invoice.currency}
+                    invoiceNumber={invoice.invoice_number}
+                    clientId={invoice.payment_gateway.config.client_id}
+                  />
+                )}
+
+                {/* Bank Transfer / Wise */}
+                {(invoice.payment_gateway.gateway === 'wise' || invoice.payment_gateway.gateway === 'bank_transfer') && (
+                  <BankTransferInfo
+                    config={invoice.payment_gateway.config}
+                    invoiceNumber={invoice.invoice_number}
+                    currency={invoice.currency}
+                    amount={invoice.total}
+                  />
+                )}
+              </div>
+            )}
+
+            {invoice.status !== 'paid' && !invoice.payment_gateway && (
+              <div className="text-center bg-gray-50 border border-gray-200 rounded-lg p-6">
+                <p className="text-gray-600">
+                  Payment options are being configured. Please contact the sender for payment instructions.
+                </p>
+              </div>
+            )}
+
+            {invoice.status === 'paid' && (
+              <div className="text-center bg-green-50 border border-green-200 rounded-lg p-6">
+                <div className="inline-flex items-center justify-center w-12 h-12 bg-green-100 rounded-full mb-3">
+                  <svg className="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-semibold text-green-900 mb-1">Payment Received</h3>
+                <p className="text-green-700">This invoice has been paid. Thank you!</p>
               </div>
             )}
           </div>
