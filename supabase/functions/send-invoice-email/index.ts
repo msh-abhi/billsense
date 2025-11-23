@@ -57,7 +57,9 @@ Deno.serve(async (req) => {
     const emailSettings = settings?.email_settings || { provider: 'system' }
 
     // Use the deployed site URL - replace with your actual domain
-    const siteUrl = 'https://warm-syrniki-68e202.netlify.app'
+    // Get site URL from environment variable (future-proof for custom domains)
+    // Update SITE_URL in Supabase Edge Functions settings when domain changes
+    const siteUrl = Deno.env.get('SITE_URL') || 'https://billsense.netlify.app'
 
     // Generate public invoice link
     const invoiceLink = `${siteUrl}/invoice/public/${invoice.payment_link}`
