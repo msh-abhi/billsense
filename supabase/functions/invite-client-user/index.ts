@@ -165,8 +165,18 @@ serve(async (req) => {
     if (!emailSent) {
       // System default sending (Supabase built-in)
       if (existingUser) {
-        // User exists, just link them (logic handled below)
+        // User exists - send them a password reset email so they can access the client portal
+        // This ensures they get an email notification about the new client access
+        const { error: resetError } = await supabaseAdmin.auth.resetPasswordForEmail(email, {
+          redirectTo: `${req.headers.get('origin') || Deno.env.get('SITE_URL')}/client/dashboard`
+        })
+
+        if (resetError) {
+          throw new Error(`Error sending access email: ${resetError.message}`)
+        }
+
         userId = existingUser.id
+        emailSent = true
       } else {
         // User doesn't exist, invite them (creates user and sends email)
         const { data: newUser, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
@@ -209,7 +219,7 @@ serve(async (req) => {
       .eq('id', client_id)
 
     const message = existingUser && !is_resend
-      ? 'User already exists and has been linked to client!'
+      ? 'User already has an account. Access notification email sent!'
       : is_resend
         ? 'Password reset email sent successfully!'
         : 'Invitation sent successfully!'
