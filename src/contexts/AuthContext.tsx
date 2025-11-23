@@ -43,26 +43,45 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const fetchProfile = async (userId: string) => {
     console.log('[AuthContext] fetchProfile called for:', userId)
     try {
-      // Create a promise that rejects after 3 seconds
+      // Create a promise that rejects after 5 seconds (increased from 3)
       const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Profile fetch timeout')), 3000)
+        setTimeout(() => reject(new Error('Profile fetch timeout')), 5000)
       )
 
-      // Wrap the Supabase call in a real Promise to ensure Promise.race works as expected
+      // Wrap the Supabase call in a real Promise
       const fetchPromise = (async () => {
-        return await supabase
+        // 1. Try to fetch from profiles (for regular users)
+        const { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .select('id, email, full_name, company_id')
           .eq('id', userId)
           .maybeSingle()
+
+        if (profileError) throw profileError
+        if (profileData) return profileData
+
+        // 2. If not found, try to fetch from client_users (for client portal users)
+        const { data: clientData, error: clientError } = await supabase
+          .from('client_users')
+          .select('id, email, client_id')
+          .eq('id', userId)
+          .maybeSingle()
+
+        if (clientError) throw clientError
+        if (clientData) {
+          // Return a profile-like object for client users
+          return {
+            id: clientData.id,
+            email: clientData.email,
+            full_name: 'Client User', // We could fetch this from clients table if needed
+            company_id: undefined // Client users don't have a company_id in the same way
+          }
+        }
+
+        return null
       })()
 
-      const { data, error } = await Promise.race([fetchPromise, timeoutPromise]) as any
-
-      if (error) {
-        console.error('[AuthContext] Error fetching profile:', error)
-        return null
-      }
+      const data = await Promise.race([fetchPromise, timeoutPromise]) as any
 
       console.log('[AuthContext] Profile fetched successfully:', !!data)
       return data

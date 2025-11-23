@@ -33,17 +33,17 @@ export const ClientProjects: React.FC = () => {
         .from('projects')
         .select(`
           id, name, status, project_type, hourly_rate, fixed_price, currency,
-          time_logs ( duration )
+          time_entries ( duration )
         `);
 
       if (error) throw error;
-      
+
       const formattedProjects = data.map(p => {
-        const totalHours = p.time_logs.reduce((sum, log) => sum + (log.duration || 0), 0) / 3600;
+        const totalHours = p.time_entries.reduce((sum, log) => sum + (log.duration || 0), 0) / 3600;
         const totalEarnings = p.project_type === 'fixed'
           ? p.fixed_price
           : totalHours * p.hourly_rate;
-        
+
         return {
           id: p.id,
           name: p.name,
@@ -110,9 +110,9 @@ export const ClientProjects: React.FC = () => {
               </Link>
             ))
           ) : (
-             <div className="text-center py-10 text-gray-500">
-                <FolderOpen className="mx-auto h-8 w-8 text-gray-400 mb-2" />
-                You do not have any projects yet.
+            <div className="text-center py-10 text-gray-500">
+              <FolderOpen className="mx-auto h-8 w-8 text-gray-400 mb-2" />
+              You do not have any projects yet.
             </div>
           )}
         </div>

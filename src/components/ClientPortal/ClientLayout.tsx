@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Receipt, FolderOpen, LogOut, Clock } from 'lucide-react';
+import { LayoutDashboard, Receipt, FolderOpen, LogOut, Clock, Settings, HelpCircle } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -9,6 +9,8 @@ const navigation = [
   { name: 'Invoices', href: '/client/invoices', icon: Receipt },
   { name: 'Projects', href: '/client/projects', icon: FolderOpen },
   { name: 'Time Logs', href: '/client/time-logs', icon: Clock },
+  { name: 'Settings', href: '/client/settings', icon: Settings },
+  { name: 'Support', href: '/client/support', icon: HelpCircle },
 ];
 
 export const ClientLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -67,33 +69,44 @@ export const ClientLayout: React.FC<{ children: React.ReactNode }> = ({ children
   return (
     <div className="flex h-screen bg-gray-50">
       {/* Sidebar */}
-      <div className="flex h-full w-64 flex-col bg-white border-r border-gray-200">
-        <div className="flex h-16 items-center px-6 border-b border-gray-200">
-          <div className="flex items-center">
+      <div className="flex h-full w-64 flex-col bg-slate-900 text-white border-r border-slate-800">
+        <div className="flex min-h-[4rem] items-center px-6 py-3 border-b border-slate-800 bg-slate-900">
+          <div className="flex items-center w-full">
             {company?.logo_url ? (
-              <img src={company.logo_url} alt={company.name} className="h-8 w-8 rounded object-cover" />
+              <img src={company.logo_url} alt={company.name} className="h-8 w-8 rounded object-cover flex-shrink-0" />
             ) : (
-              <Clock className="h-8 w-8 text-blue-600" />
+              <div className="bg-blue-600 p-1.5 rounded-lg mr-3 flex-shrink-0">
+                <Clock className="h-5 w-5 text-white" />
+              </div>
             )}
-            <span className="ml-2 text-xl font-bold text-gray-900 truncate">
-              {company?.name || 'Client Portal'}
-            </span>
+            <div className="flex flex-col ml-2 min-w-0">
+              <span className="text-base font-bold tracking-tight text-white leading-tight break-words">
+                {company?.name || 'Client Portal'}
+              </span>
+              <span className="text-xs text-slate-500 truncate mt-0.5">
+                Powered by BillSense
+              </span>
+            </div>
           </div>
         </div>
-        <nav className="flex-1 px-4 py-6 space-y-1">
+
+        <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
+          <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-4 px-2">
+            Menu
+          </div>
           {navigation.map((item) => {
             const isActive = location.pathname === item.href;
             return (
               <Link
                 key={item.name}
                 to={item.href}
-                className={`group flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors ${isActive
-                  ? 'bg-blue-50 text-blue-700'
-                  : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+                className={`group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 ${isActive
+                  ? 'bg-blue-600 text-white shadow-md shadow-blue-900/20'
+                  : 'text-slate-400 hover:bg-slate-800 hover:text-white'
                   }`}
               >
                 <item.icon
-                  className={`mr-3 h-5 w-5 transition-colors ${isActive ? 'text-blue-500' : 'text-gray-400 group-hover:text-gray-500'
+                  className={`mr-3 h-5 w-5 transition-colors ${isActive ? 'text-white' : 'text-slate-500 group-hover:text-white'
                     }`}
                 />
                 {item.name}
@@ -101,21 +114,28 @@ export const ClientLayout: React.FC<{ children: React.ReactNode }> = ({ children
             );
           })}
         </nav>
-        <div className="px-4 py-4 border-t border-gray-200">
+
+        <div className="px-4 py-4 border-t border-slate-800 bg-slate-900">
+          <div className="mb-4 px-2">
+            <p className="text-xs text-slate-500">Logged in as</p>
+            <p className="text-sm font-medium text-slate-300 truncate">{user?.email}</p>
+          </div>
           <button
             onClick={handleSignOut}
-            className="group flex w-full items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors"
+            className="group flex w-full items-center px-3 py-2.5 text-sm font-medium text-slate-400 rounded-lg hover:bg-red-500/10 hover:text-red-400 transition-colors"
           >
-            <LogOut className="mr-3 h-5 w-5 text-gray-400 group-hover:text-gray-500" />
+            <LogOut className="mr-3 h-5 w-5 text-slate-500 group-hover:text-red-400" />
             Sign Out
           </button>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <main className="flex-1 overflow-y-auto p-6">
-          {children}
+      <div className="flex-1 flex flex-col overflow-hidden bg-gray-50">
+        <main className="flex-1 overflow-y-auto p-8">
+          <div className="max-w-7xl mx-auto">
+            {children}
+          </div>
         </main>
       </div>
     </div>

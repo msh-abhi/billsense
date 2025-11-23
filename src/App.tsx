@@ -26,6 +26,8 @@ import { ClientProjects } from './components/ClientPortal/ClientProjects'
 import { ClientProjectDetails } from './components/ClientPortal/ClientProjectDetails'
 import { ClientTimeLogs } from './components/ClientPortal/ClientTimeLogs'
 import { ClientPasswordSetup } from './components/ClientPortal/ClientPasswordSetup'
+import { ClientSettings } from './components/ClientPortal/ClientSettings'
+import { ClientSupport } from './components/ClientPortal/ClientSupport'
 import { CompanyOnboarding } from './components/Onboarding/CompanyOnboarding'
 import { ErrorBoundary } from './components/common/ErrorBoundary'
 
@@ -131,6 +133,8 @@ const AppRoutes: React.FC = () => {
       <Route path="/client/projects" element={<ProtectedClientRoute><ClientProjects /></ProtectedClientRoute>} />
       <Route path="/client/projects/:projectId" element={<ProtectedClientRoute><ClientProjectDetails /></ProtectedClientRoute>} />
       <Route path="/client/time-logs" element={<ProtectedClientRoute><ClientTimeLogs /></ProtectedClientRoute>} />
+      <Route path="/client/settings" element={<ProtectedClientRoute><ClientSettings /></ProtectedClientRoute>} />
+      <Route path="/client/support" element={<ProtectedClientRoute><ClientSupport /></ProtectedClientRoute>} />
 
       {/* Onboarding Route */}
       <Route path="/onboarding" element={<ProtectedRoute><CompanyOnboarding /></ProtectedRoute>} />
