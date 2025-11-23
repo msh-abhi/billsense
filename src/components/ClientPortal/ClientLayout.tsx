@@ -25,36 +25,37 @@ export const ClientLayout: React.FC<{ children: React.ReactNode }> = ({ children
 
   const loadCompanyBranding = async () => {
     try {
-      // 1. Get client_id for current user
-      const { data: clientUser } = await supabase
+      // Optimized: Single query with joins instead of 3 sequential queries
+      const { data, error } = await supabase
         .from('client_users')
-        .select('client_id')
+        .select(`
+          client_id,
+          clients!inner (
+            company_id,
+            companies!inner (
+              name,
+              logo_url
+            )
+          )
+        `)
         .eq('id', user!.id)
         .single();
 
-      if (!clientUser) return;
+      if (error) throw error;
 
-      // 2. Get company_id from client
-      const { data: client } = await supabase
-        .from('clients')
-        .select('company_id')
-        .eq('id', clientUser.client_id)
-        .single();
-
-      if (!client) return;
-
-      // 3. Get company details
-      const { data: companyData } = await supabase
-        .from('companies')
-        .select('name, logo_url')
-        .eq('id', client.company_id)
-        .single();
-
+      // Extract company data from nested structure
+      // @ts-ignore - Supabase types don't handle nested joins well
+      const companyData = data?.clients?.companies;
       if (companyData) {
-        setCompany(companyData);
+        setCompany({
+          name: companyData.name,
+          logo_url: companyData.logo_url
+        });
       }
     } catch (error) {
       console.error('Error loading branding:', error);
+      // Fallback to default branding on error
+      setCompany({ name: 'Client Portal', logo_url: null });
     }
   };
 

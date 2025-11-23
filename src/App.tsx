@@ -25,6 +25,7 @@ import { ClientInvoices } from './components/ClientPortal/ClientInvoices'
 import { ClientProjects } from './components/ClientPortal/ClientProjects'
 import { ClientProjectDetails } from './components/ClientPortal/ClientProjectDetails'
 import { ClientTimeLogs } from './components/ClientPortal/ClientTimeLogs'
+import { ClientPasswordSetup } from './components/ClientPortal/ClientPasswordSetup'
 import { CompanyOnboarding } from './components/Onboarding/CompanyOnboarding'
 import { ErrorBoundary } from './components/common/ErrorBoundary'
 
@@ -103,6 +104,7 @@ const AppRoutes: React.FC = () => {
 
       {/* Client Public Routes */}
       <Route path="/client/signin" element={<ClientSignIn />} />
+      <Route path="/client/setup-password" element={<ClientPasswordSetup />} />
 
       {/* Other Public Routes */}
       <Route path="/invoice/public/:paymentLink" element={<PublicInvoiceView />} />

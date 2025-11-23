@@ -17,6 +17,7 @@ export const ClientDashboard: React.FC = () => {
   const { user } = useAuth(); // Get the authenticated user from our context
   const [stats, setStats] = useState<ClientDashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string>('');
 
   useEffect(() => {
     if (user) {
@@ -28,39 +29,25 @@ export const ClientDashboard: React.FC = () => {
     if (!user) return;
 
     try {
-      // 1. Find the client record linked to the logged-in auth user
-      const { data: clientUser, error: clientUserError } = await supabase
+      // Optimized: Single query with joins instead of 2 sequential queries
+      const { data, error: queryError } = await supabase
         .from('client_users')
-        .select('client_id')
+        .select(`
+          clients!inner (
+            name,
+            currency,
+            projects (id, status),
+            invoices (total, status)
+          )
+        `)
         .eq('id', user.id)
         .single();
 
-      if (clientUserError || !clientUser) {
-        console.error('Client user lookup error:', clientUserError);
-        throw new Error('Could not find associated client account.');
-      }
+      if (queryError) throw queryError;
+      if (!data?.clients) throw new Error('Client data not found');
 
-      const clientId = clientUser.client_id;
-
-      // 2. Fetch the client's details, including their projects and invoices
-      // We need to fetch these separately or ensure RLS allows the join
-      // With the new RLS, we can fetch projects and invoices directly if we want, 
-      // but fetching via client is also fine if the policy allows.
-      // Let's fetch via client to get the aggregate view.
-      const { data: clientData, error: clientDataError } = await supabase
-        .from('clients')
-        .select(`
-          name,
-          currency,
-          projects (id, status),
-          invoices (total, status)
-        `)
-        .eq('id', clientId)
-        .single();
-
-      if (clientDataError || !clientData) {
-        throw new Error("Could not load client details.");
-      }
+      // @ts-ignore - Supabase types don't handle nested joins well
+      const clientData = data.clients;
 
       // 3. Calculate the stats
       const activeProjects = clientData.projects.filter(p => p.status === 'active').length;
@@ -74,10 +61,11 @@ export const ClientDashboard: React.FC = () => {
         unpaidInvoices,
         totalBilled,
       });
+      setError(''); // Clear any previous errors
 
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error loading client dashboard:", error);
-      // Handle error display if necessary
+      setError(error.message || 'Failed to load dashboard data. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -94,6 +82,23 @@ export const ClientDashboard: React.FC = () => {
             <div className="h-24 bg-gray-200 rounded-lg"></div>
             <div className="h-24 bg-gray-200 rounded-lg"></div>
           </div>
+        </div>
+      </ClientLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <ClientLayout>
+        <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+          <h3 className="text-lg font-semibold text-red-900 mb-2">Error Loading Dashboard</h3>
+          <p className="text-red-700 mb-4">{error}</p>
+          <button
+            onClick={() => { setLoading(true); loadDashboardData(); }}
+            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+          >
+            Try Again
+          </button>
         </div>
       </ClientLayout>
     );

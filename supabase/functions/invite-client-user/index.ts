@@ -103,7 +103,7 @@ serve(async (req) => {
             type: 'invite',
             email: email,
             options: {
-              redirectTo: `${req.headers.get('origin')}/client/dashboard`
+              redirectTo: `${req.headers.get('origin') || Deno.env.get('SITE_URL')}/client/setup-password`
             }
           })
 
@@ -124,13 +124,25 @@ serve(async (req) => {
                 email: emailSettings.sender_email || 'no-reply@invoiceai.com'
               },
               to: [{ email: email }],
-              subject: 'You have been invited to the Client Portal',
+              subject: 'Welcome to Your Client Portal',
               htmlContent: `
-                <p>Hello,</p>
-                <p>You have been invited to access the Client Portal.</p>
-                <p><a href="${actionLink}">Click here to accept your invitation</a></p>
-                <p>If you cannot click the link, copy and paste this URL into your browser:</p>
-                <p>${actionLink}</p>
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                  <h2 style="color: #1F2937; margin-bottom: 20px;">Welcome to Your Client Portal!</h2>
+                  <p style="color: #4B5563; line-height: 1.6;">Hello,</p>
+                  <p style="color: #4B5563; line-height: 1.6;">You have been invited to access your client portal where you can view projects, invoices, and track progress.</p>
+                  <p style="color: #1F2937; font-weight: 600; margin-top: 24px;">Next Step: Set Up Your Password</p>
+                  <p style="color: #4B5563; line-height: 1.6;">Click the button below to create your password and access your account.</p>
+                  <div style="text-align: center; margin: 32px 0;">
+                    <a href="${actionLink}" style="background-color: #3B82F6; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: 600;">
+                      Set Up Your Password
+                    </a>
+                  </div>
+                  <p style="color: #6B7280; font-size: 14px; line-height: 1.6;">If the button doesn't work, copy and paste this link into your browser:</p>
+                  <p style="color: #6B7280; font-size: 12px; word-break: break-all; background-color: #F3F4F6; padding: 12px; border-radius: 6px;">${actionLink}</p>
+                  <hr style="margin: 32px 0; border: none; border-top: 1px solid #E5E7EB;">
+                  <p style="color: #9CA3AF; font-size: 12px; line-height: 1.6;">This invitation link will expire in 24 hours for security reasons.</p>
+                  <p style="color: #9CA3AF; font-size: 12px; line-height: 1.6;">If you didn't expect this invitation, you can safely ignore this email.</p>
+                </div>
               `
             })
           })
@@ -158,6 +170,7 @@ serve(async (req) => {
       } else {
         // User doesn't exist, invite them (creates user and sends email)
         const { data: newUser, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
+          redirectTo: `${req.headers.get('origin') || Deno.env.get('SITE_URL')}/client/setup-password`,
           data: {
             invited_for_client: client_id
           }
