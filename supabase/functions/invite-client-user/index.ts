@@ -166,9 +166,9 @@ serve(async (req) => {
       // System default sending (Supabase built-in)
       if (existingUser) {
         // User exists - send them a password reset email so they can access the client portal
-        // This ensures they get an email notification about the new client access
+        // Redirect to password setup page so they can set/confirm their password
         const { error: resetError } = await supabaseAdmin.auth.resetPasswordForEmail(email, {
-          redirectTo: `${req.headers.get('origin') || Deno.env.get('SITE_URL')}/client/dashboard`
+          redirectTo: `${req.headers.get('origin') || Deno.env.get('SITE_URL')}/client/setup-password`
         })
 
         if (resetError) {
